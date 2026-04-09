@@ -52,6 +52,7 @@ static bool ultrasonic_read_distance_cm(float *distance_cm)
     return true;
 }
 
+
 esp_err_t presence_sensor_init(void)
 {
     gpio_config_t trig_cfg = {
