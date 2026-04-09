@@ -1,7 +1,5 @@
-#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "config.h"
 #include "co2_sensor.h"
@@ -16,50 +14,56 @@
 
 static const char *TAG = "CO2_SENSOR";
 
-static bool parse_ppm_from_ascii(const char *buf, int len, int *ppm_out)
+static uint8_t mhz19_checksum(const uint8_t frame[9])
 {
-    int i = 0;
-    int value = 0;
-    bool found_digit = false;
-
-    while (i < len && !isdigit((unsigned char)buf[i])) {
-        i++;
+    uint16_t sum = 0;
+    for (int i = 1; i < 8; i++) {
+        sum += frame[i];
     }
-
-    while (i < len && isdigit((unsigned char)buf[i])) {
-        found_digit = true;
-        value = (value * 10) + (buf[i] - '0');
-        i++;
-    }
-
-    if (!found_digit) {
-        return false;
-    }
-
-    if (value < 0) {
-        value = 0;
-    }
-
-    *ppm_out = value;
-    return true;
+    return (uint8_t)(0xFF - (sum & 0xFF) + 1);
 }
 
 static bool co2_sensor_read_ppm(int *ppm)
 {
-    uint8_t rx_buf[64];
-    int read_len = uart_read_bytes(
-        CO2_SENSOR_UART_PORT,
-        rx_buf,
-        sizeof(rx_buf) - 1,
-        pdMS_TO_TICKS(CO2_SENSOR_READ_TIMEOUT_MS));
+    const uint8_t cmd_read_ppm[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+    uint8_t response[9];
 
-    if (read_len <= 0) {
+    uart_flush_input(CO2_SENSOR_UART_PORT);
+
+    if (uart_write_bytes(CO2_SENSOR_UART_PORT, cmd_read_ppm, sizeof(cmd_read_ppm)) != sizeof(cmd_read_ppm)) {
         return false;
     }
 
-    rx_buf[read_len] = '\0';
+    if (uart_wait_tx_done(CO2_SENSOR_UART_PORT, pdMS_TO_TICKS(100)) != ESP_OK) {
+        return false;
+    }
 
-    return parse_ppm_from_ascii((const char *)rx_buf, read_len, ppm);
+    int read_len = uart_read_bytes(CO2_SENSOR_UART_PORT,
+                                   response,
+                                   sizeof(response),
+                                   pdMS_TO_TICKS(CO2_SENSOR_READ_TIMEOUT_MS));
+
+    if (read_len != sizeof(response)) {
+        ESP_LOGW(TAG, "Reponse UART MH-Z19B incomplete (len=%d)", read_len);
+        return false;
+    }
+
+    if (response[0] != 0xFF || response[1] != 0x86) {
+        ESP_LOGW(TAG, "Entete reponse MH-Z19B invalide: %02X %02X", response[0], response[1]);
+        return false;
+    }
+
+    if (mhz19_checksum(response) != response[8]) {
+        ESP_LOGW(TAG, "Checksum MH-Z19B invalide: calc=%02X recv=%02X", mhz19_checksum(response), response[8]);
+        return false;
+    }
+
+    *ppm = ((int)response[2] << 8) | response[3];
+    if (*ppm < 0) {
+        *ppm = 0;
+    }
+
+    return true;
 }
 
 static bool wait_level_with_timeout(gpio_num_t pin, int expected_level, int64_t timeout_us)
