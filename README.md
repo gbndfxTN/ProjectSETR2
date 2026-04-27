@@ -1,6 +1,6 @@
 # ProjectSETR2
 
-ProjectSETR2 is the **remote sensor node** for the SETR system. It runs on an **ESP32** with **ESP-IDF** and collects sensor measurements before sending them to the main board over **UART / RS232**.
+ProjectSETR2 is the **remote sensor node** for the SETR system. It runs on an **ESP32** with **ESP-IDF**, collects sensor measurements, and sends them to the main board over **UART / RS232**. It is intended to stay lightweight and focused on acquisition.
 
 ## Project role
 
