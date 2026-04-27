@@ -23,12 +23,12 @@
  * - ABC: utile seulement si le capteur voit regulierement de l'air frais.
  *   Dans une piece occupee en continu, laisser desactive.
  */
-#define CO2_SENSOR_ZERO_CALIBRATE_ON_BOOT 0
+#define CO2_SENSOR_ZERO_CALIBRATE_ON_BOOT 1
 #define CO2_SENSOR_CONFIGURE_ABC_ON_BOOT  1
 #define CO2_SENSOR_ABC_ENABLED            0
 
 /* Lignes annexes capteur CO2 */
-#define CO2_SENSOR_SYNC_PIN      15
+#define CO2_SENSOR_SYNC_PIN      25
 #define CO2_SENSOR_PWM_PIN       23
 #define CO2_SENSOR_PWM_TIMEOUT_US 1500000
 /* Doit correspondre a la plage reelle du module: 2000, 5000 ou 10000 ppm. */
