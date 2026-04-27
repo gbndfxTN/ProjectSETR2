@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "manual-feature-1777279873378-9q7koy",
+  "title": "lis le projet",
+  "description": "lis le projet",
+  "status": "InProgress",
+  "draft": false,
+  "featureSlug": "lis-le-projet",
+  "branchName": "feature/lis-le-projet",
+  "baseBranch": "main",
+  "conversationId": "65a617ff-46a6-444d-ada0-c6bf124deb19",
+  "projectIds": [
+    "project-projectsetr-1777271221428",
+    "project-projectsetr2-1777271234294"
+  ],
+  "executionTargets": [
+    {
+      "projectId": "project-projectsetr-1777271221428",
+      "branchName": "feature/lis-le-projet",
+      "targetBranchName": "main",
+      "worktreeKey": "branch-project-projects-feature-lis-le-projet-da9cce68",
+      "repoPath": "/Users/oscarlahaie/github/ProjectSETR"
+    },
+    {
+      "projectId": "project-projectsetr2-1777271234294",
+      "branchName": "feature/lis-le-projet",
+      "targetBranchName": "main",
+      "worktreeKey": "branch-project-projects-feature-lis-le-projet-67665e9d",
+      "repoPath": "/Users/oscarlahaie/github/ProjectSETR2"
+    }
+  ],
+  "updatedAt": "2026-04-27T08:51:39.880Z"
+}

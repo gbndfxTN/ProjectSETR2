@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "manual-feature-1777271294280-yyub78",
+  "title": "Analyze Projects",
+  "description": "Add project analysis to summarize structure, status, and key insights across repos.",
+  "status": "InProgress",
+  "draft": false,
+  "featureSlug": "analyze-projects",
+  "branchName": "feature/analyze-projects",
+  "baseBranch": "main",
+  "conversationId": "6a53f854-126f-454b-af37-75959a722808",
+  "projectIds": [
+    "project-projectsetr2-1777271234294"
+  ],
+  "executionTargets": [
+    {
+      "projectId": "project-projectsetr2-1777271234294",
+      "branchName": "feature/analyze-projects",
+      "targetBranchName": "main",
+      "worktreeKey": "branch-project-projects-feature-analyze-projects-d1059289",
+      "repoPath": "/Users/oscarlahaie/github/ProjectSETR2"
+    }
+  ],
+  "updatedAt": "2026-04-27T15:31:34.392Z"
+}
