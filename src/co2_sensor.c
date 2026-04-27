@@ -13,6 +13,7 @@
 #include "sensor_message.h"
 
 static const char *TAG = "CO2_SENSOR";
+static int64_t s_init_time_us;
 
 static uint8_t mhz19_checksum(const uint8_t frame[9])
 {
@@ -23,18 +24,29 @@ static uint8_t mhz19_checksum(const uint8_t frame[9])
     return (uint8_t)(0xFF - (sum & 0xFF) + 1);
 }
 
+static bool mhz19_send_command(const uint8_t command[9])
+{
+    uart_flush_input(CO2_SENSOR_UART_PORT);
+
+    if (uart_write_bytes(CO2_SENSOR_UART_PORT, command, 9) != 9) {
+        ESP_LOGW(TAG, "Commande MH-Z19B non envoyee");
+        return false;
+    }
+
+    if (uart_wait_tx_done(CO2_SENSOR_UART_PORT, pdMS_TO_TICKS(100)) != ESP_OK) {
+        ESP_LOGW(TAG, "Timeout TX commande MH-Z19B");
+        return false;
+    }
+
+    return true;
+}
+
 static bool co2_sensor_read_ppm(int *ppm)
 {
     const uint8_t cmd_read_ppm[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
     uint8_t response[9];
 
-    uart_flush_input(CO2_SENSOR_UART_PORT);
-
-    if (uart_write_bytes(CO2_SENSOR_UART_PORT, cmd_read_ppm, sizeof(cmd_read_ppm)) != sizeof(cmd_read_ppm)) {
-        return false;
-    }
-
-    if (uart_wait_tx_done(CO2_SENSOR_UART_PORT, pdMS_TO_TICKS(100)) != ESP_OK) {
+    if (!mhz19_send_command(cmd_read_ppm)) {
         return false;
     }
 
@@ -64,6 +76,23 @@ static bool co2_sensor_read_ppm(int *ppm)
     }
 
     return true;
+}
+
+static bool co2_sensor_zero_calibrate(void)
+{
+    const uint8_t cmd_zero[9] = {0xFF, 0x01, 0x87, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78};
+
+    ESP_LOGW(TAG, "Calibration zero MH-Z19B demandee: verifier air frais stable avant boot");
+    return mhz19_send_command(cmd_zero);
+}
+
+static bool co2_sensor_set_abc(bool enabled)
+{
+    uint8_t cmd_abc[9] = {0xFF, 0x01, 0x79, enabled ? 0xA0 : 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    cmd_abc[8] = mhz19_checksum(cmd_abc);
+    ESP_LOGI(TAG, "ABC MH-Z19B: %s", enabled ? "active" : "desactive");
+    return mhz19_send_command(cmd_abc);
 }
 
 static bool wait_level_with_timeout(gpio_num_t pin, int expected_level, int64_t timeout_us)
@@ -121,12 +150,12 @@ static bool co2_sensor_read_pwm_ppm(int *ppm_out)
         return false;
     }
 
-    ppm = (int)((CO2_SENSOR_PWM_MAX_PPM * numerator) / denominator);
+    ppm = (int)((CO2_SENSOR_DETECTION_RANGE_PPM * numerator) / denominator);
     if (ppm < 0) {
         ppm = 0;
     }
-    if (ppm > CO2_SENSOR_PWM_MAX_PPM) {
-        ppm = CO2_SENSOR_PWM_MAX_PPM;
+    if (ppm > CO2_SENSOR_DETECTION_RANGE_PPM) {
+        ppm = CO2_SENSOR_DETECTION_RANGE_PPM;
     }
 
     *ppm_out = ppm;
@@ -169,6 +198,22 @@ esp_err_t co2_sensor_init(void)
     ESP_ERROR_CHECK(gpio_config(&pwm_cfg));
     ESP_ERROR_CHECK(gpio_config(&sync_cfg));
 
+    s_init_time_us = esp_timer_get_time();
+
+#if CO2_SENSOR_CONFIGURE_ABC_ON_BOOT
+    if (!co2_sensor_set_abc(CO2_SENSOR_ABC_ENABLED != 0)) {
+        ESP_LOGW(TAG, "Configuration ABC MH-Z19B en echec");
+    }
+#endif
+
+#if CO2_SENSOR_ZERO_CALIBRATE_ON_BOOT
+    if (!co2_sensor_zero_calibrate()) {
+        ESP_LOGW(TAG, "Calibration zero MH-Z19B en echec");
+    }
+#else
+    ESP_LOGI(TAG, "Calibration zero MH-Z19B au boot desactivee");
+#endif
+
     ESP_LOGI(TAG, "CO2 init OK: UART%d @ %d, TX=%d RX=%d, PWM=%d, SYNC=%d",
              CO2_SENSOR_UART_PORT,
              CO2_SENSOR_UART_BAUD,
@@ -189,8 +234,14 @@ void co2_producer_task(void *arg)
         sensor_msg_t msg_pwm;
         int ppm_uart = 0;
         int ppm_pwm = 0;
+        int64_t age_ms = (esp_timer_get_time() - s_init_time_us) / 1000;
         bool ok_uart = co2_sensor_read_ppm(&ppm_uart);
         bool ok_pwm = co2_sensor_read_pwm_ppm(&ppm_pwm);
+
+        if (age_ms < CO2_SENSOR_WARMUP_MS) {
+            ESP_LOGW(TAG, "Capteur CO2 en chauffe (%lld/%d ms): mesures possiblement instables",
+                     (long long)age_ms, CO2_SENSOR_WARMUP_MS);
+        }
 
         msg_uart.type = SENSOR_TYPE_CO2_UART;
         if (ok_uart) {
