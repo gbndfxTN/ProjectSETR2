@@ -39,12 +39,12 @@
 #define ULTRASON_ECHO_PIN        32
 
 /* Seuil présence */
-#define PRESENCE_THRESHOLD_CM    90.0f
+#define PRESENCE_THRESHOLD_CM    50.0f
 
 /* Timing des tâches */
 #define CO2_TASK_PERIOD_MS       4000
 #define PRES_TASK_PERIOD_MS      500
-#define UART_TX_PERIOD_MS        1000
+#define UART_TX_PERIOD_MS        4000
 
 /* Timeout écho ultrason */
 #define ECHO_TIMEOUT_US          30000
