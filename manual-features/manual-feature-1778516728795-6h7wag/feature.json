@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "manual-feature-1778516728795-6h7wag",
+  "title": "Lire tout le code présent",
+  "description": "Parcourt le projet pour lire et prendre en compte la totalité du code source présent.",
+  "status": "InProgress",
+  "draft": false,
+  "featureSlug": "lire-tout-le-code-present",
+  "branchName": "feature/lire-tout-le-code-present",
+  "baseBranch": "main",
+  "conversationId": "77a5a3c3-a608-4716-b4df-798a2a63a5aa",
+  "projectIds": [
+    "project-projectsetr2-1777271234294"
+  ],
+  "executionTargets": [
+    {
+      "projectId": "project-projectsetr2-1777271234294",
+      "branchName": "feature/lire-tout-le-code-present",
+      "targetBranchName": "main",
+      "worktreeKey": "branch-project-projects-feature-lire-tout-le-code-presen-4584dbb5",
+      "repoPath": "/Users/oscarlahaie/github/ProjectSETR2"
+    }
+  ],
+  "updatedAt": "2026-05-11T16:27:01.999Z"
+}
