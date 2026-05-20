@@ -23,8 +23,8 @@
  * - ABC: utile seulement si le capteur voit regulierement de l'air frais.
  *   Dans une piece occupee en continu, laisser desactive.
  */
-#define CO2_SENSOR_ZERO_CALIBRATE_ON_BOOT 1
-#define CO2_SENSOR_CONFIGURE_ABC_ON_BOOT  1
+#define CO2_SENSOR_ZERO_CALIBRATE_ON_BOOT 0
+#define CO2_SENSOR_CONFIGURE_ABC_ON_BOOT  0
 #define CO2_SENSOR_ABC_ENABLED            0
 
 /* Lignes annexes capteur CO2 */
